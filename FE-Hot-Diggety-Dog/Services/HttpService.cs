@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -8,12 +9,15 @@ using System.Threading.Tasks;
 public class HttpService : IHttpService
 {
     private readonly HttpClient _httpClient;
+    private readonly ILocalStorageService _localStorageService;
 
     public HttpService(
-        HttpClient httpClient
+        HttpClient httpClient,
+        ILocalStorageService localStorageService
     )
     {
         _httpClient = httpClient;
+        _localStorageService = localStorageService;
     }
 
     public async Task<T> Get<T>(string uri)
@@ -76,22 +80,35 @@ public class HttpService : IHttpService
 
     private async Task SendRequest(HttpRequestMessage request)
     {
+        await AddJwtHeader(request);
         using var response = await _httpClient.SendAsync(request);
         await HandleErrors(response);
     }
 
     private async Task<T> SendRequest<T>(HttpRequestMessage request)
     {
+        await AddJwtHeader(request);
+
         using var response = await _httpClient.SendAsync(request);
 
         await HandleErrors(response);
 
-        var options = new JsonSerializerOptions
+        JsonSerializerOptions options = new()
         {
             PropertyNameCaseInsensitive = true
         };
         options.Converters.Add(new StringConverter());
         return await response.Content.ReadFromJsonAsync<T>(options);
+    }
+
+    private async Task AddJwtHeader(HttpRequestMessage request)
+    {
+        var user = await _localStorageService.GetItem<User>(LocalStorageConstants.UserItem);
+        bool isApiUrl = !request.RequestUri.IsAbsoluteUri;
+        if (user != null && isApiUrl)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue(APIConstants.AuthenticationHeaderValueBearer, user.Token);
+        }
     }
 
     private async Task HandleErrors(HttpResponseMessage response)
