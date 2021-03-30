@@ -1,0 +1,64 @@
+@page "/account/login"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button> 
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Login</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@loginRequest" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Username</label>
+                <InputText @bind-Value="loginRequest.Username" class="form-control" />
+                <ValidationMessage For="@(() => loginRequest.Username)" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <InputText @bind-Value="loginRequest.Password" type="password" class="form-control" />
+                <ValidationMessage For="@(() => loginRequest.Password)" />
+            </div>
+            @if (message != null)
+            {
+                @message <br />
+            }
+            <button disabled="@loading" class="btn btn-primary">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Login
+            </button>
+            <NavLink href="account/register" class="btn btn-link">Register</NavLink>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginRequest = new LoginRequest();
+    private bool loading { get; set; }
+    private string message { get; set; }
+
+    private async void OnValidSubmit()
+    {
+        loading = true;
+        try
+        {
+            await AccountService.Login(loginRequest);
+            AppState.LoggedIn = true;
+            NavigationManager.NavigateTo(PagesConstants.HomePage);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            loading = false;
+            StateHasChanged();
+        }
+    }
+}
