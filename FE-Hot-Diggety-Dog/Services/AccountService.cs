@@ -40,6 +40,6 @@ public class AccountService : IAccountService
 
     public async Task Register(RegisterRequest registerRequest)
     {
-        await _httpService.Post(APIConstants.UsersEndpoint, registerRequest);
+        await _httpService.Post(APIConstants.RegisterUserEndpoint, registerRequest);
     }
 }
