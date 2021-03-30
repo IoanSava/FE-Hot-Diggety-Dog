@@ -1,0 +1,66 @@
+@page "/account/register"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button>
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Create a new account</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@registerRequest" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Email</label>
+                <InputText @bind-Value="registerRequest.Email" class="form-control" />
+                <ValidationMessage For="@(() => registerRequest.Email)" />
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <InputText @bind-Value="registerRequest.Username" class="form-control" />
+                <ValidationMessage For="@(() => registerRequest.Username)" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <InputText @bind-Value="registerRequest.Password" type="password" class="form-control" />
+                <ValidationMessage For="@(() => registerRequest.Password)" />
+            </div>
+            @if (message != null)
+            {
+                @message <br />
+            }
+            <button disabled="@loading" class="btn btn-primary">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Register
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest registerRequest = new RegisterRequest();
+    private bool loading { get; set; }
+    private string message { get; set; }
+
+    private async void OnValidSubmit()
+    {
+        loading = true;
+        try
+        {
+            await AccountService.Register(registerRequest);
+            NavigationManager.NavigateTo(PagesConstants.LoginPage);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            loading = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,5 +1,16 @@
 ﻿@page "/"
+@inject IAccountService AccountService
 
-<h1>Hello, world!</h1>
+ @if (@AccountService.User != null)
+{
+    <h1>Hi @AccountService.User.Username!</h1>
+    <p>In case it wasn’t clear, we love hotdogs. To us, they represent the fun of food – hands-on, all-in, and messy in a good way. That’s why since making our first sausage in 1991, we’ve taken our hotdogs across the country: from universities to theme parks, cinemas to stadiums and everywhere in between.
+Throughout that time we’ve constantly grown our range, bringing delicious food and smart equipment to all of our customers, and we don’t plan on stopping anytime soon.</p>
+}
+else
+{
+    <h1>Hi!</h1> 
+    <p>In case it wasn’t clear, we love hotdogs. To us, they represent the fun of food – hands-on, all-in, and messy in a good way. That’s why since making our first sausage in 1991, we’ve taken our hotdogs across the country: from universities to theme parks, cinemas to stadiums and everywhere in between.
+Throughout that time we’ve constantly grown our range, bringing delicious food and smart equipment to all of our customers, and we don’t plan on stopping anytime soon.</p>
+}
 
-Welcome to your new app.
