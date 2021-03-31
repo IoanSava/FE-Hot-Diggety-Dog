@@ -1,45 +1,51 @@
+using FE_Hot_Diggety_Dog.Models;
+using FE_Hot_Diggety_Dog.Models.Account;
+using FE_Hot_Diggety_Dog.Resources;
 using Microsoft.AspNetCore.Components;
 using System.Threading.Tasks;
 
-public class AccountService : IAccountService
+namespace FE_Hot_Diggety_Dog.Services
 {
-    private readonly IHttpService _httpService;
-    private readonly NavigationManager _navigationManager;
-    private readonly ILocalStorageService _localStorageService;
-
-    public User User { get; private set; }
-
-    public AccountService(
-        IHttpService httpService,
-        NavigationManager navigationManager,
-        ILocalStorageService localStorageService
-    )
+    public class AccountService : IAccountService
     {
-        _httpService = httpService;
-        _navigationManager = navigationManager;
-        _localStorageService = localStorageService;
-    }
+        private readonly IHttpService _httpService;
+        private readonly NavigationManager _navigationManager;
+        private readonly ILocalStorageService _localStorageService;
 
-    public async Task Initialize()
-    {
-        User = await _localStorageService.GetItem<User>(LocalStorageConstants.UserItem);
-    }
+        public User User { get; private set; }
 
-    public async Task Login(LoginRequest loginRequest)
-    {
-        User = await _httpService.Post<User>(APIConstants.AuthenticateEndpoint, loginRequest);
-        await _localStorageService.SetItem(LocalStorageConstants.UserItem, User);
-    }
+        public AccountService(
+            IHttpService httpService,
+            NavigationManager navigationManager,
+            ILocalStorageService localStorageService
+        )
+        {
+            _httpService = httpService;
+            _navigationManager = navigationManager;
+            _localStorageService = localStorageService;
+        }
 
-    public async Task Logout()
-    {
-        User = null;
-        await _localStorageService.RemoveItem(LocalStorageConstants.UserItem);
-        _navigationManager.NavigateTo(PagesConstants.LoginPage);
-    }
+        public async Task Initialize()
+        {
+            User = await _localStorageService.GetItem<User>(LocalStorageConstants.UserItem);
+        }
 
-    public async Task Register(RegisterRequest registerRequest)
-    {
-        await _httpService.Post(APIConstants.RegisterUserEndpoint, registerRequest);
+        public async Task Login(LoginRequest loginRequest)
+        {
+            User = await _httpService.Post<User>(ApiConstants.AuthenticateEndpoint, loginRequest);
+            await _localStorageService.SetItem(LocalStorageConstants.UserItem, User);
+        }
+
+        public async Task Logout()
+        {
+            User = null;
+            await _localStorageService.RemoveItem(LocalStorageConstants.UserItem);
+            _navigationManager.NavigateTo(PagesConstants.LoginPage);
+        }
+
+        public async Task Register(RegisterRequest registerRequest)
+        {
+            await _httpService.Post(ApiConstants.RegisterUserEndpoint, registerRequest);
+        }
     }
 }

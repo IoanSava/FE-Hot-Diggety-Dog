@@ -1,8 +1,10 @@
-  
+using FE_Hot_Diggety_Dog.Resources;
 using System.ComponentModel.DataAnnotations;
 
-public class RegisterRequest
+namespace FE_Hot_Diggety_Dog.Models.Account
 {
+    public class RegisterRequest
+    {
         [Required]
         public string Username { get; set; }
 
@@ -13,4 +15,5 @@ public class RegisterRequest
         [Required]
         [MinLength(6, ErrorMessage = ModelConstants.InvalidPasswordLengthErrorMessage)]
         public string Password { get; set; }
+    }
 }

@@ -1,10 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-public class LoginRequest
+namespace FE_Hot_Diggety_Dog.Models.Account
 {
-    [Required]
-    public string Username { get; set; }
+    public class LoginRequest
+    {
+        [Required]
+        public string Username { get; set; }
 
-    [Required]
-    public string Password { get; set; }
+        [Required]
+        public string Password { get; set; }
+    }
 }

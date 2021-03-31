@@ -1,22 +1,25 @@
 using System;
 
-public class AppState
+namespace FE_Hot_Diggety_Dog.Helpers
 {
-    private bool _loggedIn;
-    public event Action OnChange;
-
-    public bool LoggedIn
+    public class AppState
     {
-        get { return _loggedIn; }
-        set
+        private bool _loggedIn;
+        public event Action OnChange;
+
+        public bool LoggedIn
         {
-            if (_loggedIn != value)
+            get { return _loggedIn; }
+            set
             {
-                _loggedIn = value;
-                NotifyStateChanged();
+                if (_loggedIn != value)
+                {
+                    _loggedIn = value;
+                    NotifyStateChanged();
+                }
             }
         }
-    }
 
-    private void NotifyStateChanged() => OnChange?.Invoke();
+        private void NotifyStateChanged() => OnChange?.Invoke();
+    }
 }

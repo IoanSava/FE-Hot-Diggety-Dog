@@ -52,7 +52,7 @@ else
     {
         try
         {
-            products = await Http.Get<List<Product>>(APIConstants.ProductsEndpoint);
+            products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
         }
         catch (Exception ex)
         {
