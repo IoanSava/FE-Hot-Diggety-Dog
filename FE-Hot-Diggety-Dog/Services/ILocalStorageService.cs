@@ -1,8 +1,11 @@
 ﻿using System.Threading.Tasks;
 
-public interface ILocalStorageService
+namespace FE_Hot_Diggety_Dog.Services
 {
-    Task<T> GetItem<T>(string key);
-    Task SetItem<T>(string key, T value);
-    Task RemoveItem(string key);
+    public interface ILocalStorageService
+    {
+        Task<T> GetItem<T>(string key);
+        Task SetItem<T>(string key, T value);
+        Task RemoveItem(string key);
+    }
 }

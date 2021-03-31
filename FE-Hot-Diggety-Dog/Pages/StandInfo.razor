@@ -36,20 +36,17 @@ else
             </tbody>
         </table>
     }
-
 }
+
 @code {
-    
-
     private List<HotDogStand> stands = new List<HotDogStand>();
-
     private string message { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            stands = await Http.Get<List<HotDogStand>>(APIConstants.StandsEndpoint);
+            stands = await Http.Get<List<HotDogStand>>(ApiConstants.StandsEndpoint);
         }
         catch (Exception ex)
         {

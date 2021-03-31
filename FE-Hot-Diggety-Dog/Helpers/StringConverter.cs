@@ -2,24 +2,27 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-public class StringConverter : JsonConverter<string>
+namespace FE_Hot_Diggety_Dog.Helpers
 {
-    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public class StringConverter : JsonConverter<string>
     {
-        if (reader.TokenType == JsonTokenType.Number)
+        public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            return reader.GetInt32().ToString();
-        }
-        else if (reader.TokenType == JsonTokenType.String)
-        {
-            return reader.GetString();
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                return reader.GetInt32().ToString();
+            }
+            else if (reader.TokenType == JsonTokenType.String)
+            {
+                return reader.GetString();
+            }
+
+            throw new JsonException();
         }
 
-        throw new JsonException();
-    }
-
-    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
-    {
-        writer.WriteStringValue(value);
+        public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value);
+        }
     }
 }

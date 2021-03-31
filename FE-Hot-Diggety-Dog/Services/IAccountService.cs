@@ -1,10 +1,15 @@
+using FE_Hot_Diggety_Dog.Models;
+using FE_Hot_Diggety_Dog.Models.Account;
 using System.Threading.Tasks;
 
-public interface IAccountService
+namespace FE_Hot_Diggety_Dog.Services
 {
-    User User { get; }
-    Task Initialize();
-    Task Login(LoginRequest loginRequest);
-    Task Logout();
-    Task Register(RegisterRequest registerRequest);
+    public interface IAccountService
+    {
+        User User { get; }
+        Task Initialize();
+        Task Login(LoginRequest loginRequest);
+        Task Logout();
+        Task Register(RegisterRequest registerRequest);
+    }
 }

@@ -1,33 +1,37 @@
-﻿using Microsoft.JSInterop;
+﻿using FE_Hot_Diggety_Dog.Resources;
+using Microsoft.JSInterop;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-public class LocalStorageService : ILocalStorageService
+namespace FE_Hot_Diggety_Dog.Services
 {
-    private readonly IJSRuntime _jsRuntime;
-
-    public LocalStorageService(IJSRuntime jsRuntime)
+    public class LocalStorageService : ILocalStorageService
     {
-        _jsRuntime = jsRuntime;
-    }
+        private readonly IJSRuntime _jsRuntime;
 
-    public async Task<T> GetItem<T>(string key)
-    {
-        var json = await _jsRuntime.InvokeAsync<string>(LocalStorageConstants.GetItem, key);
+        public LocalStorageService(IJSRuntime jsRuntime)
+        {
+            _jsRuntime = jsRuntime;
+        }
 
-        if (json == null)
-            return default;
+        public async Task<T> GetItem<T>(string key)
+        {
+            var json = await _jsRuntime.InvokeAsync<string>(LocalStorageConstants.GetItem, key);
 
-        return JsonSerializer.Deserialize<T>(json);
-    }
+            if (json == null)
+                return default;
 
-    public async Task SetItem<T>(string key, T value)
-    {
-        await _jsRuntime.InvokeVoidAsync(LocalStorageConstants.SetItem, key, JsonSerializer.Serialize(value));
-    }
+            return JsonSerializer.Deserialize<T>(json);
+        }
 
-    public async Task RemoveItem(string key)
-    {
-        await _jsRuntime.InvokeVoidAsync(LocalStorageConstants.RemoveItem, key);
+        public async Task SetItem<T>(string key, T value)
+        {
+            await _jsRuntime.InvokeVoidAsync(LocalStorageConstants.SetItem, key, JsonSerializer.Serialize(value));
+        }
+
+        public async Task RemoveItem(string key)
+        {
+            await _jsRuntime.InvokeVoidAsync(LocalStorageConstants.RemoveItem, key);
+        }
     }
 }
