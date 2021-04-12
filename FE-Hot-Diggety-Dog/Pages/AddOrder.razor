@@ -1,0 +1,154 @@
+@page "/add-order"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject AppState AppState
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button> 
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Add Order</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@addOrderRequest" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>User ID</label>
+                <InputText @bind-Value="addOrderRequest.UserId" class="form-control" />
+                <ValidationMessage For="@(() => addOrderRequest.UserId)" />
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <InputDate @bind-Value="addOrderRequest.Timestamp" type="datetime-local" class="form-control" />
+                <ValidationMessage For="@(() => addOrderRequest.Timestamp)" />
+            </div>
+            @if (message != null)
+            {
+                @message
+                <br />
+            }
+            else
+            {
+                @if(products == null)
+                {
+                    <p><em>Loading...</em></p>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label>Add products to order</label>
+                        <select class="form-control" name="order" @onchange=@addItemToOrder>
+                            <option value="">Select a product</option>
+                            @foreach (var product in products)
+                            {
+                            <option value=@product.Id>@product.Name</option>
+                            }
+                        </select>
+                    </div>
+                    @if (addOrderRequest.Products.Count != 0)
+                    {
+                        <table class="table">
+                            <th>Product ID</th>
+                            <th>Quantity</th>
+                            @foreach (var item in addOrderRequest.Products)
+                            {
+                                <tr>
+                                    <td>@item.ProductId</td>
+                                    <td>@item.Quantity</td>
+                                </tr>
+                            
+                            }
+                        </table>
+                    }
+                    <div>
+                        <p> <b>Total:</b> @total </p> 
+                    </div>
+                }
+            }
+            
+            @if (message != null)
+            {
+                @message <br />
+            }
+            <button disabled="@loading" class="btn btn-primary">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Add Order
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private List<Product> products = new List<Product>();
+    private AddOrderRequest addOrderRequest = new AddOrderRequest();
+    private string message { get; set; }
+    private bool loading { get; set; }
+    private Guid selectedItem { get; set; }
+    private float total { get; set; }
+
+    private void addItemToOrder(ChangeEventArgs selectEvent) {
+        string value = selectEvent.Value.ToString();
+        if (value == "")
+        {
+            return;
+        }
+
+        selectedItem = Guid.Parse(value);
+        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == selectedItem);
+        if (index >= 0)
+        {
+            addOrderRequest.Products.ElementAt(index).Quantity += 1;
+        }
+        else 
+        {
+            AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
+            addProductToOrder.ProductId = selectedItem;
+            addProductToOrder.Quantity = 1;
+            addOrderRequest.Products.Add(addProductToOrder);
+        }
+        int indexInProductList = products.FindIndex(item => item.Id == selectedItem);
+        UpdateTotalCost(products.ElementAt(indexInProductList).Price);
+    }
+
+    private void UpdateTotalCost(float amount)
+    {
+        total += amount;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        addOrderRequest.Timestamp = DateTime.Now;
+        try
+        {
+            products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async void OnValidSubmit()
+    {
+        loading = true;
+        try
+        {   
+            addOrderRequest.OperatorId = AccountService.User.Id;
+            await Http.Post(ApiConstants.AddOrderEndpoint, addOrderRequest);
+            NavigationManager.NavigateTo(PagesConstants.HomePage);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            loading = false;
+            StateHasChanged();
+        }
+    }
+}

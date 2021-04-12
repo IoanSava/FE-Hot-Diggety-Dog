@@ -6,5 +6,6 @@ namespace FE_Hot_Diggety_Dog.Resources
         public const string HomePage = "/";
         public const string Menu = "products";
         public const string StandInfo = "stands";
+        public const string AddOrderPage = "add-order";
     }
 }
