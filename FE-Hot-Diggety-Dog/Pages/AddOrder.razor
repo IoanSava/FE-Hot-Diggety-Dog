@@ -8,7 +8,7 @@
         onclick="window.history.go(-1); return false;"
         type="submit" class="oi oi-arrow-thick-left"
         style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
-</button> 
+</button>
 
 <div class="card">
     <h4 class="card-header" style="background-color: var(--highlight)">Add Order</h4>
@@ -16,9 +16,14 @@
         <EditForm Model="@addOrderRequest" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
             <div class="form-group">
-                <label>User ID</label>
-                <InputText @bind-Value="addOrderRequest.UserId" class="form-control" />
-                <ValidationMessage For="@(() => addOrderRequest.UserId)" />
+                <label>Customer</label>
+                <select class="form-control" name="user" @bind=@addOrderRequest.UserId>
+                    <option value="">Select a customer</option>
+                    @foreach (var user in users)
+                    {
+                        <option value=@user.Id.ToString()>@user.Username</option>
+                    }
+                </select>
             </div>
             <div class="form-group">
                 <label>Date</label>
@@ -56,10 +61,13 @@
                             @foreach (var item in addOrderRequest.Products)
                             {
                                 <tr>
-                                    <td>@item.ProductId</td>
-                                    <td>@item.Quantity</td>
+                                    <td>@products.ElementAt(@products.FindIndex(prod => @item.ProductId == prod.Id)).Name</td>
+                                    <td>
+                                        <button style="border:none; background-color:white;" @onclick=@(() => removeItem(@item.ProductId))><span class="oi oi-minus" style="color:red;"></span></button>
+                                        @item.Quantity
+                                        <button style="border:none; background-color:white;" @onclick=@(() => addItem(@item.ProductId))><span class="oi oi-plus" style="color:green;"></span></button>
+                                    </td>
                                 </tr>
-                            
                             }
                         </table>
                     }
@@ -73,7 +81,7 @@
             {
                 @message <br />
             }
-            <button disabled="@loading" class="btn btn-primary">
+            <button type="submit" disabled="@loading" class="btn btn-primary">
                 @if (loading)
                 {
                     <span class="spinner-border spinner-border-sm mr-1"></span>
@@ -86,47 +94,77 @@
 
 @code {
     private List<Product> products = new List<Product>();
+    private List<User> users = new List<User>();
     private AddOrderRequest addOrderRequest = new AddOrderRequest();
     private string message { get; set; }
     private bool loading { get; set; }
-    private Guid selectedItem { get; set; }
     private float total { get; set; }
 
-    private void addItemToOrder(ChangeEventArgs selectEvent) {
+    private void addItem(Guid itemId)
+    {
+        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
+        if (index >= 0)
+        {
+            addOrderRequest.Products.ElementAt(index).Quantity += 1;
+        }
+        else
+        {
+            AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
+            addProductToOrder.ProductId = itemId;
+            addProductToOrder.Quantity = 1;
+            addOrderRequest.Products.Add(addProductToOrder);
+        }
+        int indexInProductList = products.FindIndex(item => item.Id == itemId);
+        AddToTotalCost(products.ElementAt(indexInProductList).Price);
+    }
+
+    private void removeItem(Guid itemId)
+    {
+        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
+        if (index >= 0)
+        {
+            if (addOrderRequest.Products.ElementAt(index).Quantity > 1)
+            {
+                addOrderRequest.Products.ElementAt(index).Quantity -= 1;
+            }
+            else
+            {
+                addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
+            }
+            int indexInProductList = products.FindIndex(item => item.Id == itemId);
+            DecreaseFromTotalCost(products.ElementAt(indexInProductList).Price);
+        }
+    }
+
+    private void addItemToOrder(ChangeEventArgs selectEvent)
+    {
         string value = selectEvent.Value.ToString();
         if (value == "")
         {
             return;
         }
-
-        selectedItem = Guid.Parse(value);
-        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == selectedItem);
-        if (index >= 0)
-        {
-            addOrderRequest.Products.ElementAt(index).Quantity += 1;
-        }
-        else 
-        {
-            AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
-            addProductToOrder.ProductId = selectedItem;
-            addProductToOrder.Quantity = 1;
-            addOrderRequest.Products.Add(addProductToOrder);
-        }
-        int indexInProductList = products.FindIndex(item => item.Id == selectedItem);
-        UpdateTotalCost(products.ElementAt(indexInProductList).Price);
+        Guid selectedItem = Guid.Parse(value);
+        addItem(selectedItem);
     }
 
-    private void UpdateTotalCost(float amount)
+    private void AddToTotalCost(float amount)
     {
         total += amount;
     }
 
+    private void DecreaseFromTotalCost(float amount)
+    {
+        total -= amount;
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        addOrderRequest.OperatorId = AccountService.User.Id;
         addOrderRequest.Timestamp = DateTime.Now;
         try
         {
             products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
+            users = await Http.Get<List<User>>(ApiConstants.CustomersEndpoint);
         }
         catch (Exception ex)
         {
@@ -139,9 +177,8 @@
     {
         loading = true;
         try
-        {   
-            addOrderRequest.OperatorId = AccountService.User.Id;
-            await Http.Post(ApiConstants.AddOrderEndpoint, addOrderRequest);
+        {
+            await Http.Post(ApiConstants.OrdersEndpoint, addOrderRequest);
             NavigationManager.NavigateTo(PagesConstants.HomePage);
         }
         catch (Exception ex)

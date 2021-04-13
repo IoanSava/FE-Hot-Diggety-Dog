@@ -7,10 +7,11 @@
 
         public const string AuthenticateEndpoint = "/api/v1/users/authenticate";
         public const string UsersEndpoint = "/api/v1/users";
+        public const string CustomersEndpoint = "/api/v1/users/customers";
         public const string RegisterUserEndpoint = "/api/v1/users/register";
 
         public const string StandsEndpoint = "/api/v1/stands";
         public const string ProductsEndpoint = "/api/v1/products";
-        public const string AddOrderEndpoint = "/api/v1/orders";
+        public const string OrdersEndpoint = "/api/v1/orders";
     }
 }
