@@ -56,10 +56,13 @@
                             @foreach (var item in addOrderRequest.Products)
                             {
                                 <tr>
-                                    <td>@item.ProductId</td>
-                                    <td>@item.Quantity</td>
+                                    <td>@products.ElementAt(@products.FindIndex(prod => @item.ProductId == prod.Id)).Name</td>
+                                    <td>
+                                        <button style="border:none; background-color:white;" @onclick=@(() => removeItem(@item.ProductId))><span class="oi oi-minus" style="color:red;" @onclick=@(() => removeItem(@item.ProductId))></span></button>
+                                        @item.Quantity
+                                        <button style="border:none; background-color:white;" @onclick=@(() => addItem(@item.ProductId))><span class="oi oi-plus" style="color:green;"></span></button>
+                                    </td>
                                 </tr>
-                            
                             }
                         </table>
                     }
@@ -92,6 +95,44 @@
     private Guid selectedItem { get; set; }
     private float total { get; set; }
 
+     private void addItem(Guid itemId)
+    {
+        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
+        if (index >= 0)
+        {
+            addOrderRequest.Products.ElementAt(index).Quantity += 1;
+        }
+        else 
+        {
+            AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
+            addProductToOrder.ProductId = itemId;
+            addProductToOrder.Quantity = 1;
+            addOrderRequest.Products.Add(addProductToOrder);
+        }
+        int indexInProductList = products.FindIndex(item => item.Id == itemId);
+        AddToTotalCost(products.ElementAt(indexInProductList).Price);
+    }
+
+    private void removeItem(Guid itemId)
+    {
+        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
+        if( index >= 0 )
+        {
+            if(addOrderRequest.Products.ElementAt(index).Quantity > 1)
+            {
+                addOrderRequest.Products.ElementAt(index).Quantity -= 1;
+            }
+            else 
+            {
+                addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
+            }
+            int indexInProductList = products.FindIndex(item => item.Id == itemId);
+            DecreaseFromTotalCost(products.ElementAt(indexInProductList).Price);
+        }
+        
+        Console.WriteLine(addOrderRequest.Products.Count);
+        
+    }
     private void addItemToOrder(ChangeEventArgs selectEvent) {
         string value = selectEvent.Value.ToString();
         if (value == "")
@@ -100,25 +141,17 @@
         }
 
         selectedItem = Guid.Parse(value);
-        int index = addOrderRequest.Products.FindIndex(item => item.ProductId == selectedItem);
-        if (index >= 0)
-        {
-            addOrderRequest.Products.ElementAt(index).Quantity += 1;
-        }
-        else 
-        {
-            AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
-            addProductToOrder.ProductId = selectedItem;
-            addProductToOrder.Quantity = 1;
-            addOrderRequest.Products.Add(addProductToOrder);
-        }
-        int indexInProductList = products.FindIndex(item => item.Id == selectedItem);
-        UpdateTotalCost(products.ElementAt(indexInProductList).Price);
+        addItem(selectedItem);        
     }
 
-    private void UpdateTotalCost(float amount)
+    private void AddToTotalCost(float amount)
     {
         total += amount;
+    }
+
+    private void DecreaseFromTotalCost(float amount)
+    {
+        total -= amount;
     }
 
     protected override async Task OnInitializedAsync()
