@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@inject IJSRuntime jsRuntime
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -11,3 +11,12 @@
         </div>
     </div>
 </div>
+
+@code{
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        jsRuntime.InvokeVoidAsync("fbAsyncInit");
+    }
+}
