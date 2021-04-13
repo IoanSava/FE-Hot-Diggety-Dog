@@ -1,0 +1,31 @@
+@page "/export-sales"
+@inject IHttpService Http
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject AppState AppState
+
+
+@if (message != null)
+{
+    @message
+    <br />
+}
+
+@code {
+    private string message { get; set; }
+
+    protected override async void OnInitialized()
+    {
+        try
+        {
+            //await Http.Get<List<Order>>(ApiConstants.ExportEndpoint);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+
+}
