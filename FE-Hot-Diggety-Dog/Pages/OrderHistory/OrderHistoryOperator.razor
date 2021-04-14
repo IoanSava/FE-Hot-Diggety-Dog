@@ -7,6 +7,16 @@
 @using System.Text.Json;
 
 
+<style>
+    .classhover {
+    }
+
+    .classhover:hover {
+        color: #9e51e1;
+        cursor: pointer;
+    }
+</style>
+
 @if (message != null)
 {
     @message
@@ -41,7 +51,7 @@ else
                     <tr>
                         <td>@order.UserId</td>
                         <td>@order.Timestamp</td>
-                        <td style="padding-left:30px;"><span class="oi oi-cart classhover"></span></td>
+                        <td style="padding-left:30px;"><span class="oi oi-cart classhover"  @onclick="() => RedirectToProductsPage(order.Id)"></span></td>
                         <td>@order.Total</td>
                     </tr>
                 }
@@ -67,7 +77,7 @@ else
         await LoadOrders();
     }
 
-    private async Task LoadOrders(int page = 1, int entitiesPerPage = 1)
+    private async Task LoadOrders(int page = 1, int entitiesPerPage = 5)
     {
         string endpoint = $"{ApiConstants.OrdersEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
 
@@ -85,6 +95,11 @@ else
     {
         currentPage = page;
         await LoadOrders(page);
+    }
+
+    public void RedirectToProductsPage(Guid OrderId)
+    {
+        NavigationManager.NavigateTo($"{PagesConstants.OrderHistory}/{OrderId.ToString()}");
     }
 }
 

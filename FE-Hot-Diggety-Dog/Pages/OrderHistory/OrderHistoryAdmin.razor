@@ -41,7 +41,6 @@ else
                     <th>Operator Id</th>
                     <th>Customer Id</th>
                     <th>Timestamp</th>
-                    <th>Products</th>
                     <th>Total</th>
                 </tr>
             </thead>
@@ -52,7 +51,6 @@ else
                         <td>@order.OperatorId</td>
                         <td>@order.UserId</td>
                         <td>@order.Timestamp</td>
-                        <td style="padding-left:30px;"><span class="oi oi-cart classhover"></span></td>
                         <td>@order.Total</td>
                     </tr>
                 }
@@ -76,7 +74,7 @@ else
         await LoadOrders();
     }
 
-    private async Task LoadOrders(int page = 1, int entitiesPerPage = 1)
+    private async Task LoadOrders(int page = 1, int entitiesPerPage = 5)
     {
         string endpoint = $"{ApiConstants.OrdersEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
 
