@@ -178,6 +178,10 @@
         loading = true;
         try
         {
+<<<<<<< HEAD
+=======
+            addOrderRequest.OperatorId = AccountService.User.Id;
+>>>>>>> 3ef2f19 (fix: download report)
             await Http.Post(ApiConstants.OrdersEndpoint, addOrderRequest);
             NavigationManager.NavigateTo(PagesConstants.HomePage);
         }

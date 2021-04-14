@@ -30,7 +30,7 @@ else
         <h3>Order history</h3>
         <div>
             <label>Export sales</label>
-            <button onclick="DownloadReport"
+            <button @onclick="DownloadReport"
                     type="submit" class="oi oi-data-transfer-download"
                     style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
             </button>
@@ -60,7 +60,6 @@ else
         </table>
         <Pagination TotalPages="totalPages" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage"></Pagination>
     }
-
 }
 @code {
     private List<Order> allOrders = new List<Order>();
@@ -79,7 +78,7 @@ else
 
     private async Task LoadOrders(int page = 1, int entitiesPerPage = 1)
     {
-        string endpoint = $"{ApiConstants.OrderEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
+        string endpoint = $"{ApiConstants.OrdersEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
 
         var response = await HttpClient.GetAsync(endpoint);
         if (response.IsSuccessStatusCode)
@@ -97,11 +96,12 @@ else
         await LoadOrders(page);
     }
 
-    public async Task DownloadReport()
+    public async void DownloadReport()
     {
-        var bytes = await Http.Get<byte[]>(ApiConstants.ExportEndpoint);
-        await BlazorDownloadFileService.DownloadFile("abc.csv", bytes.ToList(), 
-            CancellationToken.None, "application/octet-stream");
+        var file = await Http.GetString(ApiConstants.ExportEndpoint);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(file);
+        await BlazorDownloadFileService.DownloadFile(Constants.SalesReportFilename, System.Convert.ToBase64String(bytes),
+            CancellationToken.None, "text/csv");
     }
 }
 

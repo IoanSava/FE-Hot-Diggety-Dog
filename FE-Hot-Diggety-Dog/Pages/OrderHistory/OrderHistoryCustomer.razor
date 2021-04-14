@@ -55,25 +55,16 @@ else
     private int totalPages;
     private int currentPage = 1;
 
-
     private string message { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            ordersForCustomer = await Http.Get<List<Order>>($"{ApiConstants.OrderEndpoint}/customers/{AccountService.User.Id}");
-        }
-        catch (Exception ex)
-        {
-            message = ex.Message;
-            StateHasChanged();
-        }
+        await LoadOrders();
     }
 
     private async Task LoadOrders(int page = 1, int entitiesPerPage = 1)
     {
-        string endpoint = $"{ApiConstants.OrderEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
+        string endpoint = $"{ApiConstants.OrdersEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
 
         var response = await HttpClient.GetAsync(endpoint);
         if (response.IsSuccessStatusCode)
