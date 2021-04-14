@@ -1,0 +1,105 @@
+@page "/order-history-admin"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject HttpClient HttpClient
+@inject AppState AppState
+@using System.Text.Json;
+@using BlazorDownloadFile;
+@using System.Threading;
+
+
+@if (message != null)
+{
+    @message
+    <br />
+}
+else
+{
+    @if (allOrders == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <button action="action"
+                onclick="window.history.go(-1); return false;"
+                type="submit" class="oi oi-arrow-thick-left"
+                style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+        </button>
+        <h3>Order history</h3>
+        <div>
+            <label>Export sales</label>
+            <button @onclick="DownloadReport"
+                    type="submit" class="oi oi-data-transfer-download"
+                    style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+            </button>
+        </div>
+        <table class="table">
+            <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
+                <tr>
+                    <th>Operator Id</th>
+                    <th>Customer Id</th>
+                    <th>Timestamp</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in allOrders)
+                {
+                    <tr>
+                        <td>@order.OperatorId</td>
+                        <td>@order.UserId</td>
+                        <td>@order.Timestamp</td>
+                        <td>@order.Total</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <Pagination TotalPages="totalPages" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage"></Pagination>
+    }
+}
+@code {
+    private List<Order> allOrders = new List<Order>();
+
+    [Inject] IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
+
+    private int totalPages;
+    private int currentPage = 1;
+
+    private string message { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders(int page = 1, int entitiesPerPage = 5)
+    {
+        string endpoint = $"{ApiConstants.OrdersEndpoint}?page={page}&entitiesPerPage={entitiesPerPage}";
+
+        var response = await HttpClient.GetAsync(endpoint);
+        if (response.IsSuccessStatusCode)
+        {
+            totalPages = int.Parse(response.Headers.GetValues(ApiConstants.NumberOfPagesHeader).FirstOrDefault());
+            var responseString = await response.Content.ReadAsStringAsync();
+            allOrders = JsonSerializer.Deserialize<List<Order>>(responseString,
+                new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+        }
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        currentPage = page;
+        await LoadOrders(page);
+    }
+
+    public async void DownloadReport()
+    {
+        var file = await Http.GetString(ApiConstants.ExportEndpoint);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(file);
+        await BlazorDownloadFileService.DownloadFile(Constants.SalesReportFilename, System.Convert.ToBase64String(bytes),
+            CancellationToken.None, "text/csv");
+    }
+}
+

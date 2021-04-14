@@ -31,6 +31,12 @@ namespace FE_Hot_Diggety_Dog.Services
             return await SendRequest<T>(request);
         }
 
+        public async Task<string> GetString(string uri)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            return await SendRequestAndReceiveString(request);
+        }
+
         public async Task Post(string uri, object value)
         {
             var request = CreateRequest(HttpMethod.Post, uri, value);
@@ -104,6 +110,17 @@ namespace FE_Hot_Diggety_Dog.Services
             };
             options.Converters.Add(new StringConverter());
             return await response.Content.ReadFromJsonAsync<T>(options);
+        }
+
+        private async Task<string> SendRequestAndReceiveString(HttpRequestMessage request)
+        {
+            await AddJwtHeader(request);
+
+            using var response = await _httpClient.SendAsync(request);
+
+            await HandleErrors(response);
+
+            return await response.Content.ReadAsStringAsync();
         }
 
         private async Task AddJwtHeader(HttpRequestMessage request)

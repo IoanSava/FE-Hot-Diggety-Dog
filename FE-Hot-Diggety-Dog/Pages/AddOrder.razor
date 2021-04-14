@@ -13,7 +13,7 @@
 <div class="card">
     <h4 class="card-header" style="background-color: var(--highlight)">Add Order</h4>
     <div class="card-body" style="background-color: var(--highlight)">
-        <EditForm Model="@addOrderRequest" OnValidSubmit="OnValidSubmit">
+        <EditForm Model="@addOrderRequest">
             <DataAnnotationsValidator />
             <div class="form-group">
                 <label>Customer</label>
@@ -37,7 +37,7 @@
             }
             else
             {
-                @if(products == null)
+                @if (products == null)
                 {
                     <p><em>Loading...</em></p>
                 }
@@ -49,7 +49,7 @@
                             <option value="">Select a product</option>
                             @foreach (var product in products)
                             {
-                            <option value=@product.Id>@product.Name</option>
+                                <option value=@product.Id>@product.Name</option>
                             }
                         </select>
                     </div>
@@ -72,16 +72,16 @@
                         </table>
                     }
                     <div>
-                        <p> <b>Total:</b> @total </p> 
+                        <p> <b>Total:</b> @total </p>
                     </div>
                 }
             }
-            
+
             @if (message != null)
             {
                 @message <br />
             }
-            <button type="submit" disabled="@loading" class="btn btn-primary">
+            <button type="submit" disabled="@loading" class="btn btn-primary" @onclick="OnValidSubmit">
                 @if (loading)
                 {
                     <span class="spinner-border spinner-border-sm mr-1"></span>
@@ -161,16 +161,8 @@
     {
         addOrderRequest.OperatorId = AccountService.User.Id;
         addOrderRequest.Timestamp = DateTime.Now;
-        try
-        {
-            products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
-            users = await Http.Get<List<User>>(ApiConstants.CustomersEndpoint);
-        }
-        catch (Exception ex)
-        {
-            message = ex.Message;
-            StateHasChanged();
-        }
+        products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
+        users = await Http.Get<List<User>>(ApiConstants.CustomersEndpoint);
     }
 
     private async void OnValidSubmit()

@@ -1,3 +1,4 @@
+using BlazorDownloadFile;
 using FE_Hot_Diggety_Dog.Helpers;
 using FE_Hot_Diggety_Dog.Resources;
 using FE_Hot_Diggety_Dog.Services;
@@ -21,7 +22,8 @@ namespace FE_Hot_Diggety_Dog
                 .AddScoped<IHttpService, HttpService>()
                 .AddScoped<ILocalStorageService, LocalStorageService>()
                 .AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration[SettingsConstants.BackEnd]) })
-                .AddSingleton<AppState>();
+                .AddSingleton<AppState>()
+                .AddBlazorDownloadFile();
 
             var host = builder.Build();
             var accountService = host.Services.GetRequiredService<IAccountService>();
