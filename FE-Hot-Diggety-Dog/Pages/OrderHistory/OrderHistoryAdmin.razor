@@ -27,36 +27,45 @@ else
                 type="submit" class="oi oi-arrow-thick-left"
                 style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
         </button>
-        <h3>Order history</h3>
-        <div>
-            <label>Export sales</label>
-            <button @onclick="DownloadReport"
-                    type="submit" class="oi oi-data-transfer-download"
-                    style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
-            </button>
-        </div>
-        <table class="table">
-            <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
-                <tr>
-                    <th>Operator Id</th>
-                    <th>Customer Id</th>
-                    <th>Timestamp</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var order in allOrders)
-                {
+
+        @if (allOrders.Count == 0)
+        {
+            <p>There are no orders yet.</p>
+        }
+        else
+        {
+            <h3>Order history</h3>
+            <div>
+                <label>Export sales</label>
+                <button @onclick="DownloadReport"
+                        type="submit" class="oi oi-data-transfer-download"
+                        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+                </button>
+            </div>
+            <table class="table">
+                <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
                     <tr>
-                        <td>@order.OperatorId</td>
-                        <td>@order.UserId</td>
-                        <td>@order.Timestamp</td>
-                        <td>@order.Total</td>
+                        <th>Operator Id</th>
+                        <th>Customer Id</th>
+                        <th>Timestamp</th>
+                        <th>Total</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-        <Pagination TotalPages="totalPages" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage"></Pagination>
+                </thead>
+                <tbody>
+                    @foreach (var order in allOrders)
+                    {
+                        <tr>
+                            <td>@order.OperatorId</td>
+                            <td>@order.UserId</td>
+                            <td>@order.Timestamp</td>
+                            <td>@order.Total</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <Pagination TotalPages="totalPages" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage"></Pagination>
+        }
+
     }
 }
 @code {
