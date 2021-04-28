@@ -9,6 +9,7 @@ namespace FE_Hot_Diggety_Dog.Services
         User User { get; }
         Task Initialize();
         Task Login(LoginRequest loginRequest);
+        Task FacebookLogin(FBAuthenticateRequest facebookLoginRequest);
         Task Logout();
         Task Register(RegisterRequest registerRequest);
     }

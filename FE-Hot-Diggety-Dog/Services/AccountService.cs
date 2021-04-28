@@ -35,6 +35,11 @@ namespace FE_Hot_Diggety_Dog.Services
             User = await _httpService.Post<User>(ApiConstants.AuthenticateEndpoint, loginRequest);
             await _localStorageService.SetItem(LocalStorageConstants.UserItem, User);
         }
+        public async Task FacebookLogin(FBAuthenticateRequest facebookLoginRequest)
+        {
+            User = await _httpService.Post<User>(ApiConstants.FacebookAuthenticateEndpoint, facebookLoginRequest);
+            await _localStorageService.SetItem(LocalStorageConstants.UserItem, User);
+        }
 
         public async Task Logout()
         {
