@@ -6,14 +6,14 @@
         public const string AuthenticationHeaderValueBearer = "Bearer";
         public const string NumberOfPagesHeader = "numberOfPages";
 
-        public const string AuthenticateEndpoint = "/api/v1/users/authenticate";
-        public const string UsersEndpoint = "/api/v1/users";
-        public const string CustomersEndpoint = "/api/v1/users/customers";
-        public const string RegisterUserEndpoint = "/api/v1/users/register";
+        public const string AuthenticateEndpoint = "/api/v2.0/Users/authenticate";
+        public const string UsersEndpoint = "/api/v2.0/Users";
+        public const string CustomersEndpoint = "/api/v2.0/Users/customers";
+        public const string RegisterUserEndpoint = "/api/v2.0/Users/register";
 
-        public const string StandsEndpoint = "/api/v1/stands";
-        public const string ProductsEndpoint = "/api/v1/products";
-        public const string OrdersEndpoint = "/api/v1/orders";
-        public const string ExportEndpoint = "/api/v1/orders/export-csv";
+        public const string StandsEndpoint = "/api/v2.0/HotDogStands";
+        public const string ProductsEndpoint = "/api/v2.0/Products";
+        public const string OrdersEndpoint = "/api/v2.0/Orders";
+        public const string ExportEndpoint = "/api/v2.0/Orders/export-csv";
     }
 }
