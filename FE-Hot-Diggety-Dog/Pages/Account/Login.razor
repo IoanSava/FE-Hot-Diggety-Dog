@@ -41,14 +41,6 @@
 
         </EditForm>
 
-        @*<button disabled="@loading" class="btn btn-primary" style="margin-top: 10px" @onclick="FbLoginProcess">
-            @if (loading)
-            {
-                <span class="spinner-border spinner-border-sm mr-1"></span>
-            }
-            Login with Facebook
-        </button>*@
-
         <fb:login-button scope="public_profile,email" style="margin-top: 10px"
                          onlogin="processFacebookLogin.fbLogin();">
         </fb:login-button>
@@ -70,16 +62,10 @@
         return base.OnInitializedAsync();
     }
 
-    //public async Task FbLoginProcess()
-    //{
-    //    await JSRuntime.InvokeAsync<object>("fbLogin");
-    //}
-
     [JSInvokable("FbLoginProcessCallback")]
     public async void FbLoginProcessCallback(string accessToken)
     {
-        FBAuthenticateRequest _request = new FBAuthenticateRequest();
-        Console.WriteLine(accessToken);
+        FacebookAuthenticateRequest _request = new FacebookAuthenticateRequest();
         _request.AccessToken = accessToken;
         loading = true;
         try

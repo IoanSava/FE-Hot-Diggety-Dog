@@ -2,10 +2,9 @@
 
 namespace FE_Hot_Diggety_Dog.Models.Account
 {
-    public class FBAuthenticateRequest
+    public class FacebookAuthenticateRequest
     {
         [Required]
         public string AccessToken { get; set; }
-
     }
 }
