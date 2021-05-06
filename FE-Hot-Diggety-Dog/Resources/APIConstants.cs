@@ -10,6 +10,7 @@
         public const string UsersEndpoint = "/api/v2.0/Users";
         public const string CustomersEndpoint = "/api/v2.0/Users/customers";
         public const string RegisterUserEndpoint = "/api/v2.0/Users/register";
+        public const string FacebookAuthenticateEndpoint = "/api/v2.0/users/facebook-authenticate";
 
         public const string StandsEndpoint = "/api/v2.0/HotDogStands";
         public const string ProductsEndpoint = "/api/v2.0/Products";
