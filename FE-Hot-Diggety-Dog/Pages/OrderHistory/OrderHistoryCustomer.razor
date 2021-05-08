@@ -5,6 +5,7 @@
 @inject HttpClient HttpClient
 @inject AppState AppState
 @using System.Text.Json;
+@using BlazorDateRangePicker;
 
 
 <style>
@@ -30,42 +31,41 @@ else
     }
     else
     {
-        @if (ordersForCustomer.Count == 0)
-        {
-            <p>You have no orders yet.</p>
-        }
-        else
-        {
-            <button action="action"
-                    onclick="window.history.go(-1); return false;"
-                    type="submit" class="oi oi-arrow-thick-left"
-                    style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
-            </button>
-            <h3>Order history</h3>
-            <table class="table">
-                <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
+        <button action="action"
+                onclick="window.history.go(-1); return false;"
+                type="submit" class="oi oi-arrow-thick-left"
+                style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+        </button>
+        <h3>Order history</h3>
+        <div>
+            <DateRangePicker @bind-StartDate="orderFilter.StartDate" @bind-EndDate="orderFilter.EndDate" OnRangeSelect="OnDateRangeSelect" MinDate="DateTimeOffset.Now.AddYears(-10)" MaxDate="DateTimeOffset.Now" placeholder="Select dates" style="margin-bottom:10px;" />
+            <span style="margin-right:10px">Select price range</span>
+            <RadzenSlider @bind-Value=@values Range="true" TValue="IEnumerable<double>" Max="maxPrice" Change=@(args => UpdatePriceRange(args)) />
+            <button class="btnnofilter" @onclick="async () => await ClearFilters()">No filters</button>
+        </div>
+        <table class="table">
+            <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
+                <tr>
+                    <th @onclick="@( () => SortBy("Timestamp"))">Timestamp <span class="oi @(SetSortIcon("Timestamp")) classhover"></span></th>
+                    <th>Products</th>
+                    <th @onclick="@( () => SortBy("Total"))">Total <span class="oi @(SetSortIcon("Total")) classhover"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in ordersForCustomer)
+                {
                     <tr>
-                        <th>Timestamp</th>
-                        <th>Products</th>
-                        <th>Total</th>
+                        <td>@order.Timestamp</td>
+                        <td style="padding-left:30px;"><span class="oi oi-cart classhover" @onclick="() => RedirectToProductsPage(order.Id)"></span></td>
+                        <td>@order.Total</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var order in ordersForCustomer)
-                    {
-                        <tr>
-                            <td>@order.Timestamp</td>
-                            <td style="padding-left:30px;"><span class="oi oi-cart classhover" @onclick="() => RedirectToProductsPage(order.Id)"></span></td>
-                            <td>@order.Total</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <Pagination TotalPages="totalPages" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage"></Pagination>
-        }
+                }
+            </tbody>
+        </table>
+        <Pagination TotalPages="totalPages" CurrentPage="currentPage" Radius="2" SelectedPage="SelectedPage"></Pagination>
     }
-
 }
+
 @code {
     private List<Order> ordersForCustomer = new List<Order>();
 
@@ -74,14 +74,22 @@ else
 
     private string message { get; set; }
 
+    OrderFilter orderFilter = new OrderFilter();
+    private bool isSorted = false;
+    decimal maxPrice = 100;
+    IEnumerable<double> values;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadOrders();
+        maxPrice = Convert.ToDecimal(await Http.GetString(ApiConstants.MaxPriceOfOrderEndpoint)) + 5;
+        values = new double[] { 0, (double)maxPrice };
     }
 
     private async Task LoadOrders(int page = 1, int entitiesPerPage = 5)
     {
-        string endpoint = $"{ApiConstants.OrdersEndpoint}/customers/{AccountService.User.Id}?page={page}&entitiesPerPage={entitiesPerPage}";
+        string query = getFilterQuery();
+        string endpoint = $"{ApiConstants.OrdersEndpoint}/customers/{AccountService.User.Id}?page={page}&entitiesPerPage={entitiesPerPage}&{query}";
 
         var response = await HttpClient.GetAsync(endpoint);
         if (response.IsSuccessStatusCode)
@@ -102,5 +110,95 @@ else
     public void RedirectToProductsPage(Guid OrderId)
     {
         NavigationManager.NavigateTo($"{PagesConstants.OrderHistory}/{OrderId.ToString()}");
+    }
+
+    private async Task SortBy(string columnName)
+    {
+        orderFilter.FieldToSortBy = columnName;
+
+        if (string.IsNullOrEmpty(orderFilter.SortDirection))
+        {
+            orderFilter.SortDirection = "asc";
+        }
+        else
+        {
+            orderFilter.SortDirection = (orderFilter.SortDirection == "asc" ? "desc" : "asc");
+        }
+        isSorted = true;
+        await LoadOrders(currentPage);
+    }
+
+    private string SetSortIcon(string columnName)
+    {
+        if (isSorted)
+        {
+            if (orderFilter.FieldToSortBy != columnName)
+            {
+                return "oi-elevator";
+            }
+            if (orderFilter.SortDirection == "asc")
+            {
+                return "oi-caret-top";
+            }
+            else
+            {
+                return "oi-caret-bottom";
+            }
+        }
+        return "oi-elevator";
+    }
+
+    private async Task ClearFilters()
+    {
+        orderFilter = new OrderFilter();
+        isSorted = false;
+        values = new double[] { 0, (double)maxPrice };
+        await SelectedPage(1);
+    }
+
+    private string getFilterQuery()
+    {
+        string query = "";
+
+        if (isSorted)
+        {
+            query = $"FieldToSortBy={orderFilter.FieldToSortBy}&SortDirection={orderFilter.SortDirection}";
+        }
+
+        if (orderFilter.StartDate != null)
+        {
+            query = $"{query}&StartDate={orderFilter.StartDate.Value.DateTime}";
+        }
+
+        if (orderFilter.EndDate != null)
+        {
+            query = $"{query}&EndDate={orderFilter.EndDate.Value.DateTime}";
+        }
+
+        if (orderFilter.MinPrice > 0)
+        {
+            query = $"{query}&MinPrice={orderFilter.MinPrice}";
+        }
+
+        if (orderFilter.MaxPrice > 0)
+        {
+            query = $"{query}&MaxPrice={orderFilter.MaxPrice}";
+        }
+
+        return query;
+    }
+
+    private async Task OnDateRangeSelect(DateRange range)
+    {
+        orderFilter.StartDate = range.Start;
+        orderFilter.EndDate = range.End;
+        await SelectedPage(1);
+    }
+
+    private async Task UpdatePriceRange(IEnumerable<double> range)
+    {
+        orderFilter.MinPrice = range.First();
+        orderFilter.MaxPrice = range.Last();
+        await SelectedPage(1);
     }
 }
