@@ -1,0 +1,75 @@
+@page "/add-stand"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject AppState AppState
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button>
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Create Stand</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@addStandRequest">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Operator</label>
+                <select class="form-control" name="user" @bind=@addStandRequest.OperatorId>
+                    <option value="">Select an operator</option>
+                    @foreach (var user in users)
+                    {
+                        <option value=@user.Id>@user.Username</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <InputText @bind-Value="addStandRequest.Address" class="form-control" />
+                <ValidationMessage For="@(() => addStandRequest.Address)" />
+            </div>
+            
+            @if (message != null)
+            {
+                @message <br />
+            }
+            <button type="submit" disabled="@loading" class="btn btn-primary" @onclick="OnValidSubmit">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Save
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private List<User> users = new List<User>();
+    private AddStandRequest addStandRequest = new AddStandRequest();
+    private string message { get; set; }
+    private bool loading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await Http.Get<List<User>>(ApiConstants.OperatorsEndpoint);
+    }
+
+    private async void OnValidSubmit()
+    {
+        loading = true;
+        try
+        {
+            await Http.Post(ApiConstants.StandsEndpoint, addStandRequest);
+            NavigationManager.NavigateTo(PagesConstants.HomePage);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            loading = false;
+            StateHasChanged();
+        }
+    }
+}

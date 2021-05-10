@@ -1,0 +1,122 @@
+@page "/update-stand"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject AppState AppState
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button>
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Update Stand</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@updateStandRequest">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Stands</label>
+                <select class="form-control" name="stand" @bind=@updateStandRequest.Id>
+                    <option value="">Select a stand</option>
+                    @foreach (var stand in stands)
+                    {
+                        <option value=@stand.Id>@stand.Address</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Operator</label>
+                <select class="form-control" name="user" @bind=@updateStandRequest.OperatorId>
+                    <option value="@currentOperatorId">@getCurrentOperator(updateStandRequest.Id)</option>
+                    @foreach (var user in users)
+                    {
+                        <option value=@user.Id>@user.Username</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Current Address : @currentAddress </label>
+                <InputText @bind-Value="updateStandRequest.Address" class="form-control" placeholder="Type here a new address..."/>
+                <ValidationMessage For="@(() => updateStandRequest.Address)" />
+            </div>
+            
+            @if (message != null)
+            {
+                @message <br />
+            }
+            <button type="submit" disabled="@loading" class="btn btn-primary" @onclick="OnValidSubmit">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Save
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private List<User> users = new List<User>();
+
+    private UpdateStandRequest updateStandRequest = new UpdateStandRequest();
+
+    private List<HotDogStand> stands = new List<HotDogStand>();
+
+    private string message { get; set; }
+
+    private bool loading { get; set; }
+
+    private Guid currentOperatorId;
+    private string currentAddress = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        stands = await Http.Get<List<HotDogStand>>(ApiConstants.StandsEndpoint);
+        users = await Http.Get<List<User>>(ApiConstants.OperatorsEndpoint);
+    }
+
+    public string getCurrentOperator(Guid id)
+    {
+        getCurrentStandInfo(id);
+        foreach(User user in users)
+        {
+            if(currentOperatorId == user.Id)
+            {
+                return user.Username;
+            }
+        }
+        return null;
+    }
+
+    public void getCurrentStandInfo(Guid id)
+    {
+        foreach(HotDogStand stand in stands)
+        {
+            if(id == stand.Id)
+            {
+                currentAddress = stand.Address;
+                currentOperatorId = stand.OperatorId;
+            }
+        }
+    }
+    private async void OnValidSubmit()
+    {
+        loading = true;
+        if(updateStandRequest.Address == "")
+        {
+            updateStandRequest.Address = currentAddress;
+        }
+        try
+        {
+            await Http.Put(ApiConstants.StandsEndpoint, updateStandRequest);
+            NavigationManager.NavigateTo(PagesConstants.HomePage);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            loading = false;
+            StateHasChanged();
+        }
+    }
+}
