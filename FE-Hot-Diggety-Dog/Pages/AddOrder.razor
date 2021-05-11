@@ -55,10 +55,11 @@
                     </div>
                     @if (addOrderRequest.Products.Count != 0)
                     {   
-                        
                         <table class="table">
-                            <th>Product ID</th>
-                            <th>Quantity</th>
+                            <tr>
+                                <th>Product ID</th>
+                                <th>Quantity</th>
+                            </tr>
                             @foreach (var item in addOrderRequest.Products)
                             {
                                 <tr>
@@ -74,12 +75,11 @@
                     }
                     <div>
                         <p> <b>Total:</b> @total </p>
-                        @if (clientDiscountableStatus == true && discount!=-1)
+                        @if (clientDiscountableStatus == true && discount != -1)
                         {
                             <p> <b>Discount:</b> -@discount</p>
                             <p> <b>Final Price:</b> @(@total-@discount)</p>
                         }
-                        
                     </div>
                 }
             }
@@ -127,23 +127,24 @@
             try
             {
                clientDiscountableStatus = await Http.Get<bool>($"{ApiConstants.OrdersDiscountEndpoint}/{addOrderRequest.UserId}");    
-            }catch(Exception e)
+            }
+            catch(Exception e)
             {
                 message = e.Message;
             }
-            
-            
         }
     }
+
     private void getDiscountedProduct()
     {
-        if(addOrderRequest.Products==null ||addOrderRequest.Products.Count==0){
+        if (addOrderRequest.Products == null || addOrderRequest.Products.Count == 0)
+        {
             discountedProduct = null;
             return;
         }
 
         discountedProduct = addOrderRequest.Products.ElementAt(0);
-        foreach(AddProductToOrderRequest product in addOrderRequest.Products)
+        foreach (AddProductToOrderRequest product in addOrderRequest.Products)
         {
             if (products.First(p => p.Id == product.ProductId).Price < products.First(p => p.Id == discountedProduct.ProductId).Price)
             {
@@ -182,12 +183,16 @@
             }
             else
             {
-                addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
-                if (clientDiscountableStatus == true && addOrderRequest.Products.ElementAt(index).ProductId==discountedProduct.ProductId)
+                if (clientDiscountableStatus == true && addOrderRequest.Products.ElementAt(index).ProductId == discountedProduct.ProductId)
                 {
                     discount = -1;
                     discountedProduct = null;
+                    addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
                     getDiscountedProduct();   
+                } 
+                else
+                {
+                    addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));     
                 }
             }
             int indexInProductList = products.FindIndex(item => item.Id == itemId);
@@ -204,9 +209,9 @@
         }
         Guid selectedItem = Guid.Parse(value);
         addItem(selectedItem);
-        if (clientDiscountableStatus==true)
+        if (clientDiscountableStatus == true)
         {
-            getDiscountedProduct();   
+            getDiscountedProduct();
         }
     }
 
@@ -233,9 +238,14 @@
         loading = true;
         try
         {   
-            if(clientDiscountableStatus==true && discountedProduct != null)
+            if (clientDiscountableStatus == true && discountedProduct != null)
             {
                 addOrderRequest.Products.First(p => p.ProductId == discountedProduct.ProductId).Quantity--;
+                addOrderRequest.DiscountedProductId = discountedProduct.ProductId;
+            }
+            else
+            {
+                addOrderRequest.DiscountedProductId = Guid.Empty;
             }
             await Http.Post(ApiConstants.OrdersEndpoint, addOrderRequest);
             NavigationManager.NavigateTo(PagesConstants.HomePage);

@@ -18,5 +18,6 @@ namespace FE_Hot_Diggety_Dog.Models
         [Required]
         public List<AddProductToOrderRequest> Products { get; set; } = new List<AddProductToOrderRequest>();
 
+        public Guid DiscountedProductId { get; set; }
     }
 }
