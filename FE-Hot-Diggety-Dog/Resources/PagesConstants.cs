@@ -8,5 +8,7 @@ namespace FE_Hot_Diggety_Dog.Resources
         public const string StandInfo = "stands";
         public const string AddOrderPage = "add-order";
         public const string OrderHistory = "order-history";
+        public const string AddStandPage = "add-stand";
+        public const string UpdateStandPage = "update-stand";
     }
 }
