@@ -16,9 +16,9 @@
         <EditForm Model="@updateStandRequest">
             <DataAnnotationsValidator />
             <div class="form-group">
-                <label>Operator</label>
+                <label>Current operator: @username </label>
                 <select class="form-control" name="user" @bind=@updateStandRequest.OperatorId>
-                    <option value="@currentOperatorId">@getCurrentOperator(StandId)</option>
+                    <option value="">Select an operator</option>
                     @foreach (var user in users)
                     {
                         <option value=@user.Id>@user.Username</option>
@@ -26,7 +26,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Current Address : @currentAddress </label>
+                <label>Current Address : @stand.Address </label>
                 <InputText @bind-Value="updateStandRequest.Address" class="form-control" placeholder="Type here a new address..."/>
                 <ValidationMessage For="@(() => updateStandRequest.Address)" />
             </div>
@@ -50,27 +50,25 @@
     [Parameter] public string StandId { get; set; }
     private List<User> users = new List<User>();
     private UpdateStandRequest updateStandRequest = new UpdateStandRequest();
-    private List<HotDogStand> stands = new List<HotDogStand>();
+    private HotDogStand stand = new HotDogStand();
 
     private string message { get; set; }
-
     private bool loading { get; set; }
-
-    private Guid currentOperatorId;
-    private string currentAddress = "";
+    private string username;
 
     protected override async Task OnInitializedAsync()
     {
-        stands = await Http.Get<List<HotDogStand>>(ApiConstants.StandsEndpoint);
+        stand = await Http.Get<HotDogStand>($"{ApiConstants.StandsEndpoint}/{Guid.Parse(StandId)}");
         users = await Http.Get<List<User>>(ApiConstants.OperatorsEndpoint);
+        username = getCurrentOperator();
+        updateStandRequest.Id = Guid.Parse(StandId);
     }
 
-    public string getCurrentOperator(string id)
+    public string getCurrentOperator()
     {
-        getCurrentStandInfo(id);
         foreach (User user in users)
         {
-            if (currentOperatorId == user.Id)
+            if (stand.OperatorId == user.Id)
             {
                 return user.Username;
             }
@@ -78,26 +76,20 @@
         return null;
     }
 
-    public void getCurrentStandInfo(string id)
-    {
-        updateStandRequest.Id = Guid.Parse(id);
-        foreach (HotDogStand stand in stands)
-        {
-            if (updateStandRequest.Id == stand.Id)
-            {
-                currentAddress = stand.Address;
-                currentOperatorId = stand.OperatorId;
-            }
-        }
-    }
-
     private async void OnValidSubmit()
     {
         loading = true;
-        if(updateStandRequest.Address == "")
+
+        if (updateStandRequest.Address == "")
         {
-            updateStandRequest.Address = currentAddress;
+            updateStandRequest.Address = stand.Address;
         }
+
+        if (updateStandRequest.OperatorId == null)
+        {
+            updateStandRequest.OperatorId = stand.OperatorId;
+        }
+
         try
         {
             await Http.Put($"{ApiConstants.StandsEndpoint}/{Guid.Parse(StandId)}", updateStandRequest);
