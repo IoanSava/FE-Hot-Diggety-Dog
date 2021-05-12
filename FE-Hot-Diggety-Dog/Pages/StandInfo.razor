@@ -71,7 +71,7 @@ else
     private async Task removeStand(Guid itemId)
     {
         int index = stands.FindIndex(item => item.Id == itemId);
-        if( index >= 0 )
+        if (index >= 0)
         {
             stands.Remove(stands.ElementAt(index));
             try
