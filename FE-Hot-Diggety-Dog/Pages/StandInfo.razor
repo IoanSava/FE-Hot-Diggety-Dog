@@ -68,27 +68,23 @@ else
     private List<HotDogStand> stands = new List<HotDogStand>();
     private string message { get; set; }
 
-    private void removeStand(Guid itemId)
+    private async Task removeStand(Guid itemId)
     {
         int index = stands.FindIndex(item => item.Id == itemId);
         if( index >= 0 )
         {
             stands.Remove(stands.ElementAt(index));
+            try
+            {
+                await Http.Delete($"{ApiConstants.StandsEndpoint}/{itemId}");
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                StateHasChanged();
+            }
         }
     }
-
-    @* private async Task DeleteStand(Guid id)
-    {
-        try
-        {
-            await Http.Delete<HotDogStand>($"{ApiConstants.StandsEndpoint}/{id}");
-        }
-        catch (Exception ex)
-        {
-            message = ex.Message;
-            StateHasChanged();
-        }
-    } *@
 
     private void editStand(Guid itemId)
     {
