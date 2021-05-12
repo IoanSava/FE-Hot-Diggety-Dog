@@ -37,8 +37,8 @@ else
                     </th>
                     @if (AppState.LoggedIn && AccountService.User.Role == "ADMIN")
                     {
-                        <th></th>
-                        <th></th>
+                        <th>Edit Stand</th>
+                        <th>Delete Stand</th>
                     }
                    
                 </tr>
@@ -71,7 +71,7 @@ else
     private async Task removeStand(Guid itemId)
     {
         int index = stands.FindIndex(item => item.Id == itemId);
-        if( index >= 0 )
+        if (index >= 0)
         {
             stands.Remove(stands.ElementAt(index));
             try

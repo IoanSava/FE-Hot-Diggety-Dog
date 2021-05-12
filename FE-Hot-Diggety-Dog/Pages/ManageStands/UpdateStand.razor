@@ -49,9 +49,7 @@
 @code {
     [Parameter] public string StandId { get; set; }
     private List<User> users = new List<User>();
-
     private UpdateStandRequest updateStandRequest = new UpdateStandRequest();
-
     private List<HotDogStand> stands = new List<HotDogStand>();
 
     private string message { get; set; }
@@ -70,9 +68,9 @@
     public string getCurrentOperator(string id)
     {
         getCurrentStandInfo(id);
-        foreach(User user in users)
+        foreach (User user in users)
         {
-            if(currentOperatorId == user.Id)
+            if (currentOperatorId == user.Id)
             {
                 return user.Username;
             }
@@ -83,15 +81,16 @@
     public void getCurrentStandInfo(string id)
     {
         updateStandRequest.Id = Guid.Parse(id);
-        foreach(HotDogStand stand in stands)
+        foreach (HotDogStand stand in stands)
         {
-            if(updateStandRequest.Id == stand.Id)
+            if (updateStandRequest.Id == stand.Id)
             {
                 currentAddress = stand.Address;
                 currentOperatorId = stand.OperatorId;
             }
         }
     }
+
     private async void OnValidSubmit()
     {
         loading = true;
