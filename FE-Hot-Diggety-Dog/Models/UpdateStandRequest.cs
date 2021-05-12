@@ -9,7 +9,7 @@ namespace FE_Hot_Diggety_Dog.Models
         public Guid Id { get; set; }
 
         [Required]
-        public Guid ? OperatorId { get; set; } 
+        public Guid OperatorId { get; set; } 
 
         [Required]
         public string Address { get; set; }
