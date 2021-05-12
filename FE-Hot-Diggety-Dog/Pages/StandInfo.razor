@@ -1,5 +1,8 @@
 @page "/stands"
 @inject IHttpService Http
+@inject NavigationManager NavigationManager
+@inject IAccountService AccountService
+@inject AppState AppState
 
 @if (message != null)
 {
@@ -19,11 +22,25 @@ else
                 type="submit" class="oi oi-arrow-thick-left"
                 style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
         </button>
-        <h3>Stands Information</h3>
+        <div style="display:flex;">
+            <h3 style="padding-top:20px">Stands Information</h3>
+             @if (AppState.LoggedIn && AccountService.User.Role == "ADMIN")
+             {
+                <button style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white; border-radius:10px; margin:10px; margin-left:auto" @onclick=@(() => addStand())><span class="oi oi-plus"></span>   Add Stand</button>
+             }
+        </div>
         <table class="table">
             <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
                 <tr>
-                    <th>Hot Dog Stand Locations</th>
+                    <th>
+                        Hot Dog Stand Locations
+                    </th>
+                    @if (AppState.LoggedIn && AccountService.User.Role == "ADMIN")
+                    {
+                        <th></th>
+                        <th></th>
+                    }
+                   
                 </tr>
             </thead>
             <tbody>
@@ -31,6 +48,15 @@ else
                 {
                     <tr>
                         <td>@stand.Address</td>
+                        @if (AppState.LoggedIn && AccountService.User.Role == "ADMIN")
+                        {
+                            <td>
+                                <button style="border:none; background-color:var(--background)" @onclick=@(() => editStand(@stand.Id))><span class="oi oi-pencil"></span></button>
+                            </td>
+                            <td>
+                                <button style="border:none; background-color:var(--background);" @onclick=@(() => removeStand(@stand.Id))><span class="oi oi-trash"></span></button>
+                            </td>
+                        }
                     </tr>
                 }
             </tbody>
@@ -42,6 +68,38 @@ else
     private List<HotDogStand> stands = new List<HotDogStand>();
     private string message { get; set; }
 
+    private void removeStand(Guid itemId)
+    {
+        int index = stands.FindIndex(item => item.Id == itemId);
+        if( index >= 0 )
+        {
+            stands.Remove(stands.ElementAt(index));
+        }
+    }
+
+    @* private async Task DeleteStand(Guid id)
+    {
+        try
+        {
+            await Http.Delete<HotDogStand>($"{ApiConstants.StandsEndpoint}/{id}");
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            StateHasChanged();
+        }
+    } *@
+
+    private void editStand(Guid itemId)
+    {
+        NavigationManager.NavigateTo($"{PagesConstants.UpdateStandPage}/{itemId.ToString()}");
+    }
+
+    private void addStand()
+    {
+        NavigationManager.NavigateTo(PagesConstants.AddStandPage);
+    }
+    
     protected override async Task OnInitializedAsync()
     {
         try

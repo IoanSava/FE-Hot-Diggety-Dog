@@ -1,4 +1,4 @@
-@page "/update-stand"
+@page "/update-stand/{StandId}"
 @inject IAccountService AccountService
 @inject NavigationManager NavigationManager
 @inject IHttpService Http
@@ -16,19 +16,9 @@
         <EditForm Model="@updateStandRequest">
             <DataAnnotationsValidator />
             <div class="form-group">
-                <label>Stands</label>
-                <select class="form-control" name="stand" @bind=@updateStandRequest.Id>
-                    <option value="">Select a stand</option>
-                    @foreach (var stand in stands)
-                    {
-                        <option value=@stand.Id>@stand.Address</option>
-                    }
-                </select>
-            </div>
-            <div class="form-group">
                 <label>Operator</label>
                 <select class="form-control" name="user" @bind=@updateStandRequest.OperatorId>
-                    <option value="@currentOperatorId">@getCurrentOperator(updateStandRequest.Id)</option>
+                    <option value="@currentOperatorId">@getCurrentOperator(StandId)</option>
                     @foreach (var user in users)
                     {
                         <option value=@user.Id>@user.Username</option>
@@ -57,6 +47,7 @@
 </div>
 
 @code {
+    [Parameter] public string StandId { get; set; }
     private List<User> users = new List<User>();
 
     private UpdateStandRequest updateStandRequest = new UpdateStandRequest();
@@ -76,7 +67,7 @@
         users = await Http.Get<List<User>>(ApiConstants.OperatorsEndpoint);
     }
 
-    public string getCurrentOperator(Guid id)
+    public string getCurrentOperator(string id)
     {
         getCurrentStandInfo(id);
         foreach(User user in users)
@@ -89,11 +80,12 @@
         return null;
     }
 
-    public void getCurrentStandInfo(Guid id)
+    public void getCurrentStandInfo(string id)
     {
+        updateStandRequest.Id = Guid.Parse(id);
         foreach(HotDogStand stand in stands)
         {
-            if(id == stand.Id)
+            if(updateStandRequest.Id == stand.Id)
             {
                 currentAddress = stand.Address;
                 currentOperatorId = stand.OperatorId;
@@ -109,8 +101,8 @@
         }
         try
         {
-            await Http.Put(ApiConstants.StandsEndpoint, updateStandRequest);
-            NavigationManager.NavigateTo(PagesConstants.HomePage);
+            await Http.Put($"{ApiConstants.StandsEndpoint}/{Guid.Parse(StandId)}", updateStandRequest);
+            NavigationManager.NavigateTo(PagesConstants.StandInfo);
         }
         catch (Exception ex)
         {
