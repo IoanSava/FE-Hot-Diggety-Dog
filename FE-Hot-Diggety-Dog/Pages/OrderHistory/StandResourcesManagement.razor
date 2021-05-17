@@ -1,0 +1,132 @@
+﻿@page "/manage-resources"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject AppState AppState
+
+
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Manage Resources</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@hotDogStand">
+        <DataAnnotationsValidator />
+        <div class="form-group">
+            <label>Add New Product</label>
+            <select class="form-control"  @onchange="@changeProduct">
+                <option value="">Select a product</option>
+                @if (hotDogStand != null && hotDogStand.StandProducts != null && products!=null)
+                {
+                    @foreach (var product in products)
+                    {
+                            @if (!productAlreadyAvailable(product))
+                            {
+                                <option value=@product.Id.ToString()>@product.Name</option>
+                            }
+                    }
+                }
+            </select>
+        </div>
+        <table class="table">
+            <tr>
+                <th>Product Name</th>
+                <th>Quantity</th>
+            </tr>
+            @if (hotDogStand != null && hotDogStand.StandProducts!=null)
+                {
+
+
+                    @foreach (var item in hotDogStand.StandProducts)
+                    {
+                        <tr>
+                            <td>@products.ElementAt(@products.FindIndex(prod => @item.Product.Id == prod.Id)).Name</td>
+                            <td>
+                             <button style="border:none; background-color:white;" @onclick=@(() => removeItem(@item.Product.Id))><span class="oi oi-minus" style="color:red;"></span></button>
+                                        @item.Quantity
+                             <button style="border:none; background-color:white;" @onclick=@(() => addItem(@item.Product.Id))><span class="oi oi-plus" style="color:green;"></span></button>
+                            </td>
+                        </tr>
+                    }
+                }       
+        </table>
+         <button type="submit" disabled="@loading" class="btn btn-primary" @onclick="OnValidSubmit">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Update Stock
+         </button>
+        </EditForm>
+    </div>
+</div>
+
+
+
+
+@code{
+
+    private HotDogStand hotDogStand=new HotDogStand();
+    private List<Product> products = new List<Product>();
+    private string message { get; set; }
+    private bool loading { get; set; }
+    
+    private bool productAlreadyAvailable(Product product)
+    {
+        if (hotDogStand.StandProducts.FirstOrDefault(p=>p.Product.Id==product.Id)==default(HotDogStandProduct))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
+        hotDogStand = await Http.Get<HotDogStand>( $"{ApiConstants.StandsEndpoint}/operator/{AccountService.User.Id}");
+    }
+    private async void OnValidSubmit()
+    {
+
+        List<AddProductToStandRequest> productsRequestsList = new List<AddProductToStandRequest>();
+        foreach(HotDogStandProduct product in hotDogStand.StandProducts.ToList())
+        {
+            AddProductToStandRequest productRequest = new AddProductToStandRequest() { ProductId = product.Product.Id, Quantity = product.Quantity };
+            productsRequestsList.Add(productRequest);
+        }
+        UpdateStandProductsRequest updateStandProductsRequest = new UpdateStandProductsRequest() { StandId=hotDogStand.Id,Products=productsRequestsList};
+         await Http.Post($"{ApiConstants.StandsEndpoint}/update-products",updateStandProductsRequest);
+         NavigationManager.NavigateTo(PagesConstants.HomePage);
+    }
+    private void addItem(Guid itemId)
+    {
+        HotDogStandProduct standProduct=hotDogStand.StandProducts.FirstOrDefault(p=>p.Product.Id==itemId);
+        if (standProduct != default(HotDogStandProduct))
+        {
+            standProduct.Quantity++;
+        }
+    }
+    
+    private void removeItem(Guid itemId)
+    {
+        HotDogStandProduct standProduct=hotDogStand.StandProducts.FirstOrDefault(p=>p.Product.Id==itemId);
+        if (standProduct != default(HotDogStandProduct) && standProduct.Quantity>0)
+        {
+            standProduct.Quantity--;
+        }
+     }
+    
+    private void changeProduct(ChangeEventArgs e)
+    {
+
+       if ((string)e.Value != "")
+        {
+            Product product = products.FirstOrDefault(p => p.Id == Guid.Parse((string)e.Value));
+            if (product != default(Product))
+            {
+                HotDogStandProduct hotDogStandProduct = new HotDogStandProduct() {Product=product,Quantity=0};
+                hotDogStand.StandProducts.Add(hotDogStandProduct);  
+            }
+        }
+    }
+
+}
