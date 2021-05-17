@@ -15,6 +15,7 @@
 
         public const string StandsEndpoint = "/api/v2.0/HotDogStands";
         public const string ProductsEndpoint = "/api/v2.0/Products";
+        public const string InventoryProductsEndpoint = "/api/v2.0/InventoryProducts";
         public const string OrdersEndpoint = "/api/v2.0/Orders";
         public const string OrdersDiscountEndpoint = "/api/v2.0/Orders/discount";
         public const string MaxPriceOfOrderEndpoint = "/api/v2.0/Orders/max-price";
