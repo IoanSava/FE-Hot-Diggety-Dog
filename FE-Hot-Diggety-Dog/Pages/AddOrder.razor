@@ -49,21 +49,19 @@
                             <option value="">Select a product</option>
                             @foreach (var product in products)
                             {
-                                <option value=@product.Id>@product.Name</option>
+                                <option value=@product.Product.Id>@product.Product.Name</option>
                             }
                         </select>
                     </div>
                     @if (addOrderRequest.Products.Count != 0)
-                    {   
+                    {
                         <table class="table">
-                            <tr>
-                                <th>Product ID</th>
-                                <th>Quantity</th>
-                            </tr>
+                            <th>Product ID</th>
+                            <th>Quantity</th>
                             @foreach (var item in addOrderRequest.Products)
                             {
                                 <tr>
-                                    <td>@products.ElementAt(@products.FindIndex(prod => @item.ProductId == prod.Id)).Name</td>
+                                    <td>@products.ElementAt(products.FindIndex(prod => @item.ProductId == prod.Product.Id)).Product.Name</td>
                                     <td>
                                         <button style="border:none; background-color:white;" @onclick=@(() => removeItem(@item.ProductId))><span class="oi oi-minus" style="color:red;"></span></button>
                                         @item.Quantity
@@ -100,9 +98,10 @@
 </div>
 
 @code {
-    private List<Product> products = new List<Product>();
+    private List<HotDogStandProduct> products = new List<HotDogStandProduct>();
     private List<User> users = new List<User>();
     private AddOrderRequest addOrderRequest=new AddOrderRequest();
+    private HotDogStand operatorStand = new HotDogStand();
     private string message { get; set; }
     private bool loading { get; set; }
     private float total { get; set; }
@@ -126,7 +125,7 @@
         {
             try
             {
-               clientDiscountableStatus = await Http.Get<bool>($"{ApiConstants.OrdersDiscountEndpoint}/{addOrderRequest.UserId}");    
+                clientDiscountableStatus = await Http.Get<bool>($"{ApiConstants.OrdersDiscountEndpoint}/{addOrderRequest.UserId}");
             }
             catch(Exception e)
             {
@@ -146,14 +145,14 @@
         discountedProduct = addOrderRequest.Products.ElementAt(0);
         foreach (AddProductToOrderRequest product in addOrderRequest.Products)
         {
-            if (products.First(p => p.Id == product.ProductId).Price < products.First(p => p.Id == discountedProduct.ProductId).Price)
+            if (products.First(p => p.Product.Id== product.ProductId).Product.Price < products.First(p => p.Product.Id == discountedProduct.ProductId).Product.Price)
             {
                 discountedProduct = product;
             }
         }
-        discount = products.First(p => p.Id == discountedProduct.ProductId).Price;
+        discount = products.First(p => p.Product.Id == discountedProduct.ProductId).Product.Price;
     }
-   
+
     private void addItem(Guid itemId)
     {
         int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
@@ -168,8 +167,8 @@
             addProductToOrder.Quantity = 1;
             addOrderRequest.Products.Add(addProductToOrder);
         }
-        int indexInProductList = products.FindIndex(item => item.Id == itemId);
-        AddToTotalCost(products.ElementAt(indexInProductList).Price);
+        int indexInProductList = products.FindIndex(item => item.Product.Id == itemId);
+        AddToTotalCost(products.ElementAt(indexInProductList).Product.Price);
     }
 
     private void removeItem(Guid itemId)
@@ -188,15 +187,15 @@
                     discount = -1;
                     discountedProduct = null;
                     addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
-                    getDiscountedProduct();   
-                } 
+                    getDiscountedProduct();
+                }
                 else
                 {
-                    addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));     
+                    addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
                 }
             }
-            int indexInProductList = products.FindIndex(item => item.Id == itemId);
-            DecreaseFromTotalCost(products.ElementAt(indexInProductList).Price);
+            int indexInProductList = products.FindIndex(item => item.Product.Id == itemId);
+            DecreaseFromTotalCost(products.ElementAt(indexInProductList).Product.Price);
         }
     }
 
@@ -229,15 +228,21 @@
     {
         addOrderRequest.OperatorId = AccountService.User.Id;
         addOrderRequest.Timestamp = DateTime.Now;
-        products = await Http.Get<List<Product>>(ApiConstants.ProductsEndpoint);
         users = await Http.Get<List<User>>(ApiConstants.CustomersEndpoint);
+
+        if (AccountService.User.Role == "OPERATOR")
+        {
+            string getStandByOperatorEndpoint = $"{ApiConstants.StandsEndpoint}/operator/{AccountService.User.Id}";
+            operatorStand = await Http.Get<HotDogStand>(getStandByOperatorEndpoint);
+            products = operatorStand.StandProducts.ToList();
+        }
     }
 
     private async void OnValidSubmit()
     {
         loading = true;
         try
-        {   
+        {
             if (clientDiscountableStatus == true && discountedProduct != null)
             {
                 addOrderRequest.Products.First(p => p.ProductId == discountedProduct.ProductId).Quantity--;
