@@ -58,6 +58,7 @@
                         <table class="table">
                             <th>Product ID</th>
                             <th>Quantity</th>
+                            <th>Available</th>
                             @foreach (var item in addOrderRequest.Products)
                             {
                                 <tr>
@@ -67,6 +68,7 @@
                                         @item.Quantity
                                         <button style="border:none; background-color:white;" @onclick=@(() => addItem(@item.ProductId))><span class="oi oi-plus" style="color:green;"></span></button>
                                     </td>
+                                    <td>@products.ElementAt(products.FindIndex(prod => @item.ProductId == prod.Product.Id)).Quantity</td>
                                 </tr>
                             }
                         </table>
@@ -113,7 +115,7 @@
     {
         if ((string)e.Value != "")
         {
-            addOrderRequest.UserId =(string) e.Value;
+            addOrderRequest.UserId = (string) e.Value;
             getUserDiscountableStatus();
             discount = -1;
         }
@@ -127,7 +129,7 @@
             {
                 clientDiscountableStatus = await Http.Get<bool>($"{ApiConstants.OrdersDiscountEndpoint}/{addOrderRequest.UserId}");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 message = e.Message;
             }
@@ -145,7 +147,7 @@
         discountedProduct = addOrderRequest.Products.ElementAt(0);
         foreach (AddProductToOrderRequest product in addOrderRequest.Products)
         {
-            if (products.First(p => p.Product.Id== product.ProductId).Product.Price < products.First(p => p.Product.Id == discountedProduct.ProductId).Product.Price)
+            if (products.First(p => p.Product.Id == product.ProductId).Product.Price < products.First(p => p.Product.Id == discountedProduct.ProductId).Product.Price)
             {
                 discountedProduct = product;
             }
@@ -156,19 +158,26 @@
     private void addItem(Guid itemId)
     {
         int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
-        if (index >= 0)
+        HotDogStandProduct product = products.FirstOrDefault(p => p.Product.Id == itemId);
+
+        if (product != default(HotDogStandProduct) && product.Quantity > 0)
         {
-            addOrderRequest.Products.ElementAt(index).Quantity += 1;
+            if (index >= 0)
+            {
+                addOrderRequest.Products.ElementAt(index).Quantity += 1;
+                product.Quantity -= 1;
+            }
+            else
+            {
+                AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
+                addProductToOrder.ProductId = itemId;
+                addProductToOrder.Quantity = 1;
+                product.Quantity -= 1;
+                addOrderRequest.Products.Add(addProductToOrder);
+            }
+            int indexInProductList = products.FindIndex(item => item.Product.Id == itemId);
+            AddToTotalCost(products.ElementAt(indexInProductList).Product.Price);
         }
-        else
-        {
-            AddProductToOrderRequest addProductToOrder = new AddProductToOrderRequest();
-            addProductToOrder.ProductId = itemId;
-            addProductToOrder.Quantity = 1;
-            addOrderRequest.Products.Add(addProductToOrder);
-        }
-        int indexInProductList = products.FindIndex(item => item.Product.Id == itemId);
-        AddToTotalCost(products.ElementAt(indexInProductList).Product.Price);
     }
 
     private void removeItem(Guid itemId)
@@ -178,7 +187,12 @@
         {
             if (addOrderRequest.Products.ElementAt(index).Quantity > 1)
             {
-                addOrderRequest.Products.ElementAt(index).Quantity -= 1;
+                HotDogStandProduct product = products.FirstOrDefault(p => p.Product.Id == itemId);
+                if(product != default(HotDogStandProduct))
+                {
+                    addOrderRequest.Products.ElementAt(index).Quantity -= 1;
+                    product.Quantity += 1;
+                }
             }
             else
             {
@@ -252,6 +266,16 @@
             {
                 addOrderRequest.DiscountedProductId = Guid.Empty;
             }
+
+            List<AddProductToStandRequest> productsRequestsList = new List<AddProductToStandRequest>();
+            foreach(HotDogStandProduct product in products)
+            {
+                AddProductToStandRequest productRequest = new AddProductToStandRequest() { ProductId = product.Product.Id, Quantity = product.Quantity };
+                productsRequestsList.Add(productRequest);
+            }
+
+            UpdateStandProductsRequest updateStandProductsRequest = new UpdateStandProductsRequest() { StandId = operatorStand.Id, Products = productsRequestsList };
+            await Http.Put($"{ApiConstants.StandsEndpoint}/products", updateStandProductsRequest);
             await Http.Post(ApiConstants.OrdersEndpoint, addOrderRequest);
             NavigationManager.NavigateTo(PagesConstants.HomePage);
         }
