@@ -50,7 +50,7 @@
                 </li>
             }
             else
-            @if (AccountService.User.Role == "OPERATOR")
+            if (AccountService.User.Role == "OPERATOR")
             {
                 <li class="nav-item px-3">
                     <NavLink class="nav-link" href="add-order">
@@ -64,20 +64,20 @@
                 </li>
             }
             else
-            if (AccountService.User.Role == "ADMIN")
-            {
-                <li class="nav-item px-3">
-                    <NavLink class="nav-link" href="order-history-admin">
-                        <span class="oi oi-book" aria-hidden="true"> </span>  Order history
-                    </NavLink>
-                </li>
-            }
-            else
             if (AccountService.User.Role == "CUSTOMER")
             {
                 <li class="nav-item px-3">
                     <NavLink class="nav-link" href="order-history-customer">
                         <span class="oi oi-book" aria-hidden="true"> </span>  Order history
+                    </NavLink>
+                </li>
+            }
+            else
+            if (AccountService.User.Role == "SUPPLIER")
+            {
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="manage-inventory">
+                        <span class="oi oi-project" aria-hidden="true"> </span>  Manage inventory
                     </NavLink>
                 </li>
             }
