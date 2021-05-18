@@ -102,7 +102,7 @@
 @code {
     private List<HotDogStandProduct> products = new List<HotDogStandProduct>();
     private List<User> users = new List<User>();
-    private AddOrderRequest addOrderRequest=new AddOrderRequest();
+    private AddOrderRequest addOrderRequest = new AddOrderRequest();
     private HotDogStand operatorStand = new HotDogStand();
     private string message { get; set; }
     private bool loading { get; set; }
@@ -183,11 +183,11 @@
     private void removeItem(Guid itemId)
     {
         int index = addOrderRequest.Products.FindIndex(item => item.ProductId == itemId);
+        HotDogStandProduct product = products.FirstOrDefault(p => p.Product.Id == itemId);
         if (index >= 0)
         {
             if (addOrderRequest.Products.ElementAt(index).Quantity > 1)
             {
-                HotDogStandProduct product = products.FirstOrDefault(p => p.Product.Id == itemId);
                 if(product != default(HotDogStandProduct))
                 {
                     addOrderRequest.Products.ElementAt(index).Quantity -= 1;
@@ -205,7 +205,11 @@
                 }
                 else
                 {
-                    addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
+                    if (product != default(HotDogStandProduct))
+                    {
+                        addOrderRequest.Products.Remove(addOrderRequest.Products.ElementAt(index));
+                        product.Quantity += 1;
+                    }
                 }
             }
             int indexInProductList = products.FindIndex(item => item.Product.Id == itemId);
