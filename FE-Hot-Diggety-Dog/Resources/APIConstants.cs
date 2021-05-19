@@ -19,6 +19,7 @@
         public const string OrdersEndpoint = "/api/v2.0/Orders";
         public const string OrdersDiscountEndpoint = "/api/v2.0/Orders/discount";
         public const string MaxPriceOfOrderEndpoint = "/api/v2.0/Orders/max-price";
+        public const string ProductsRequestEndpoint = "/api/v2.0/ProductsRequests";
         public const string ExportEndpoint = "/api/v2.0/Orders/export-csv";
     }
 }

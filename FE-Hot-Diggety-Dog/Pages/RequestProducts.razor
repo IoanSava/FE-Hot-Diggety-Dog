@@ -1,0 +1,179 @@
+﻿@page "/request-products"
+@inject IAccountService AccountService
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject AppState AppState
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button>
+
+<div class="card">
+    <h4 class="card-header" style="background-color: var(--highlight)">Request Products</h4>
+    <div class="card-body" style="background-color: var(--highlight)">
+        <EditForm Model="@addProductRequest">
+            @if (message != null)
+            {
+                @message
+                <br />
+            }
+            else
+            {
+                @if (products == null)
+                {
+                    <p><em>Loading...</em></p>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label>Add products to request</label>
+                        <select class="form-control" name="request" @onchange=@addItemToRequest>
+                            <option value="">Select a product</option>
+                            @foreach (var product in products)
+                            {
+                                <option value=@product.Product.Id>@product.Product.Name</option>
+                            }
+                        </select>
+                    </div>
+                    @if (addProductRequest.Products.Count != 0)
+                    {
+                        <table class="table">
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            @foreach (var item in addProductRequest.Products)
+                            {
+                                <tr>
+                                    <td>@products.ElementAt(products.FindIndex(prod => @item.ProductId == prod.Product.Id)).Product.Name</td>
+                                    <td>
+                                        <button style="border:none; background-color:white;" @onclick=@(() => removeItem(@item.ProductId))><span class="oi oi-minus" style="color:red;"></span></button>
+                                        @item.Quantity
+                                        <button style="border:none; background-color:white;" @onclick=@(() => addItem(@item.ProductId))><span class="oi oi-plus" style="color:green;"></span></button>
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    }
+                }
+            }
+
+            @if (message != null)
+            {
+                @message <br />
+            }
+            <button type="submit" disabled="@(loading || addProductRequest.Products.Count == 0)" class="btn btn-primary" @onclick="OnValidSubmit">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Send Request
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private List<HotDogStandProduct> products = new List<HotDogStandProduct>();
+    private AddProductRequest addProductRequest = new AddProductRequest();
+    private HotDogStand operatorStand = new HotDogStand();
+    private string message { get; set; }
+    private bool loading { get; set; }
+
+    private void addItem(Guid itemId)
+    {
+        int index = addProductRequest.Products.FindIndex(item => item.ProductId == itemId);
+        HotDogStandProduct product = products.FirstOrDefault(p => p.Product.Id == itemId);
+
+        if (product != default(HotDogStandProduct) && product.Quantity > 0)
+        {
+            if (index >= 0)
+            {
+                addProductRequest.Products.ElementAt(index).Quantity += 1;
+                product.Quantity += 1;
+            }
+            else
+            {
+                AddProductToRequest addProductToRequest = new AddProductToRequest();
+                addProductToRequest.ProductId = itemId;
+                addProductToRequest.Quantity = 1;
+                product.Quantity += 1;
+                addProductRequest.Products.Add(addProductToRequest);
+            }
+        }
+    }
+
+    private void removeItem(Guid itemId)
+    {
+        int index = addProductRequest.Products.FindIndex(item => item.ProductId == itemId);
+        HotDogStandProduct product = products.FirstOrDefault(p => p.Product.Id == itemId);
+        if (index >= 0)
+        {
+            if (addProductRequest.Products.ElementAt(index).Quantity > 1)
+            {
+                if (product != default(HotDogStandProduct))
+                {
+                    addProductRequest.Products.ElementAt(index).Quantity -= 1;
+                    product.Quantity -= 1;
+                }
+            }
+            else
+            {
+                if (product != default(HotDogStandProduct))
+                {
+                    addProductRequest.Products.Remove(addProductRequest.Products.ElementAt(index));
+                    product.Quantity -= 1;
+                }
+
+            }
+        }
+    }
+
+    private void addItemToRequest(ChangeEventArgs selectEvent)
+    {
+        string value = selectEvent.Value.ToString();
+        if (value == "")
+        {
+            return;
+        }
+        Guid selectedItem = Guid.Parse(value);
+        addItem(selectedItem);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        addProductRequest.OperatorId = AccountService.User.Id;
+        addProductRequest.Timestamp = DateTime.Now;
+
+        if (AccountService.User.Role == "OPERATOR")
+        {
+            string getStandByOperatorEndpoint = $"{ApiConstants.StandsEndpoint}/operator/{AccountService.User.Id}";
+            operatorStand = await Http.Get<HotDogStand>(getStandByOperatorEndpoint);
+            products = operatorStand.StandProducts.ToList();
+        }
+    }
+
+    private async void OnValidSubmit()
+    {
+        loading = true;
+        try
+        {
+            List<AddProductToStandRequest> productsRequestsList = new List<AddProductToStandRequest>();
+            foreach (HotDogStandProduct product in products)
+            {
+                AddProductToStandRequest productRequest = new AddProductToStandRequest() { ProductId = product.Product.Id, Quantity = product.Quantity };
+                productsRequestsList.Add(productRequest);
+            }
+
+            UpdateStandProductsRequest updateStandProductsRequest = new UpdateStandProductsRequest() { StandId = operatorStand.Id, Products = productsRequestsList };
+            await Http.Post(ApiConstants.ProductsRequestEndpoint, addProductRequest);
+            NavigationManager.NavigateTo(PagesConstants.HomePage);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            loading = false;
+            StateHasChanged();
+        }
+    }
+}
