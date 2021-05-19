@@ -11,5 +11,6 @@ namespace FE_Hot_Diggety_Dog.Resources
         public const string AddStandPage = "add-stand";
         public const string UpdateStandPage = "update-stand";
         public const string ManageStandResources = "manage-resources";
+        public const string RequestDetails = "request-details";
     }
 }
