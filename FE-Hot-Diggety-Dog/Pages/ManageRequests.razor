@@ -1,0 +1,91 @@
+@page "/manage-requests"
+@inject NavigationManager NavigationManager
+@inject IHttpService Http
+@inject AppState AppState
+
+<button action="action"
+        onclick="window.history.go(-1); return false;"
+        type="submit" class="oi oi-arrow-thick-left"
+        style="background-color:var(--background); color: var(--font-color) ;width:60px; height: 30px; border: none; margin-bottom: 20px">
+</button>
+
+@if (message != null)
+{
+    @message
+    <br />
+}
+else {
+    <h3>Requests</h3>
+    <table class="table">
+        <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
+            <tr>
+                <th>ID</th>
+                <th>Operator ID</th>
+                <th>Timestamp</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in productsRequests)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.OperatorId</td>
+                    <td>@item.Timestamp</td>
+                    <td>
+                        <button style="background-color:#20B2AA; color:white" @onclick=@(() => RedirectToRequestDetailsPage(@item.Id))>Details</button>
+                    </td>
+                    <td>
+                        <button style="background-color:green; color:white">Accept</button>
+                    </td>
+                    <td>
+                        <button style="background-color:red; color:white" @onclick=@(() => removeRequest(@item.Id))>Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ProductsRequest> productsRequests = new List<ProductsRequest>();
+    private string message { get; set; }
+
+    private async Task removeRequest(Guid requestId)
+    {
+        int index = productsRequests.FindIndex(item => item.Id == requestId);
+        if (index >= 0)
+        {
+            productsRequests.Remove(productsRequests.ElementAt(index));
+            try
+            {
+                await Http.Delete($"{ApiConstants.ProductsRequestEndpoint}/{requestId}");
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                StateHasChanged();
+            }
+        }
+    }
+
+    public void RedirectToRequestDetailsPage(Guid RequestId)
+    {
+        NavigationManager.NavigateTo($"{PagesConstants.RequestDetails}/{RequestId.ToString()}");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            productsRequests = await Http.Get<List<ProductsRequest>>(ApiConstants.ProductsRequestEndpoint);
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            StateHasChanged();
+        }
+    }
+}
