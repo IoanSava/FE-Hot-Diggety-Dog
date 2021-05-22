@@ -49,6 +49,12 @@ namespace FE_Hot_Diggety_Dog.Services
             return await SendRequest<T>(request);
         }
 
+        public async Task Put(string uri)
+        {
+            var request = CreateRequest(HttpMethod.Put, uri);
+            await SendRequest(request);
+        }
+
         public async Task Put(string uri, object value)
         {
             var request = CreateRequest(HttpMethod.Put, uri, value);
