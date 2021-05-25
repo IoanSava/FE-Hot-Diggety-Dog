@@ -8,6 +8,7 @@ namespace FE_Hot_Diggety_Dog.Services
         Task<string> GetString(string uri);
         Task Post(string uri, object value);
         Task<T> Post<T>(string uri, object value);
+        Task Put(string uri);
         Task Put(string uri, object value);
         Task<T> Put<T>(string uri, object value);
         Task Delete(string uri);

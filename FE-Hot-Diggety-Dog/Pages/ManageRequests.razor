@@ -14,44 +14,61 @@
     @message
     <br />
 }
-else {
-    <h3>Requests</h3>
-    <table class="table">
-        <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
+
+<h3>Requests</h3>
+<table class="table">
+    <thead style="background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%); color:white">
+        <tr>
+            <th>ID</th>
+            <th>Operator ID</th>
+            <th>Timestamp</th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in productsRequests)
+        {
             <tr>
-                <th>ID</th>
-                <th>Operator ID</th>
-                <th>Timestamp</th>
-                <th></th>
-                <th></th>
-                <th></th>
+                <td>@item.Id</td>
+                <td>@item.OperatorId</td>
+                <td>@item.Timestamp</td>
+                <td>
+                    <button style="background-color:#20B2AA; color:white" @onclick=@(() => RedirectToRequestDetailsPage(@item.Id))>Details</button>
+                </td>
+                <td>
+                    <button style="background-color:green; color:white" @onclick=@(() => acceptRequest(@item.Id))>Accept</button>
+                </td>
+                <td>
+                    <button style="background-color:red; color:white" @onclick=@(() => removeRequest(@item.Id))>Delete</button>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in productsRequests)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.OperatorId</td>
-                    <td>@item.Timestamp</td>
-                    <td>
-                        <button style="background-color:#20B2AA; color:white" @onclick=@(() => RedirectToRequestDetailsPage(@item.Id))>Details</button>
-                    </td>
-                    <td>
-                        <button style="background-color:green; color:white">Accept</button>
-                    </td>
-                    <td>
-                        <button style="background-color:red; color:white" @onclick=@(() => removeRequest(@item.Id))>Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+        }
+    </tbody>
+</table>
 
 @code {
     private List<ProductsRequest> productsRequests = new List<ProductsRequest>();
     private string message { get; set; }
+
+    private async Task acceptRequest(Guid requestId)
+    {
+        int index = productsRequests.FindIndex(item => item.Id == requestId);
+        if (index >= 0)
+        {
+            try
+            {
+                await Http.Put($"{ApiConstants.ProductsRequestEndpoint}/{requestId}/accept");
+                productsRequests.Remove(productsRequests.ElementAt(index));
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+                StateHasChanged();
+            }
+        }
+    }
 
     private async Task removeRequest(Guid requestId)
     {
@@ -71,9 +88,9 @@ else {
         }
     }
 
-    public void RedirectToRequestDetailsPage(Guid RequestId)
+    public void RedirectToRequestDetailsPage(Guid requestId)
     {
-        NavigationManager.NavigateTo($"{PagesConstants.RequestDetails}/{RequestId.ToString()}");
+        NavigationManager.NavigateTo($"{PagesConstants.RequestDetails}/{requestId.ToString()}");
     }
 
     protected override async Task OnInitializedAsync()
